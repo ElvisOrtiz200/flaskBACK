@@ -3,6 +3,7 @@ import joblib
 import numpy as np
 from flask_cors import CORS
 import pandas as pd
+import mysql.connector
 
 app = Flask(__name__)
 CORS(app)  # This allows all origins by default
@@ -19,6 +20,14 @@ scaler2 = joblib.load('./objetive2scaler.pkl')
 le_genero = joblib.load('./label_encoder_genero.pkl')
 le_antecedentes = joblib.load('label_encoder_antecedentes.pkl')
 
+def connect_db():
+    return mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="123456",
+        database="machine"
+    )
+
 def cadena_a_dataframe(cadena):
     valores = cadena.split(',')
     datos_entrada = {
@@ -33,6 +42,49 @@ def cadena_a_dataframe(cadena):
         'Antecedentesfamiliares': valores[8]
     }
     return pd.DataFrame([datos_entrada])
+
+@app.route('/api/pacientesByName', methods=['GET'])
+def buscar_pacientes_byName():
+    paciente = request.args.get('pacienteBuscado')
+    
+    conn = connect_db()
+    cursor = conn.cursor(dictionary=True)
+    query = """
+        SELECT id, nombre, apellido, dni, email
+        FROM pacient
+        WHERE nombre LIKE %s OR apellido LIKE %s
+    """
+    cursor.execute(query, (f"%{paciente}%", f"%{paciente}%"))
+    pacientes = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    
+    return jsonify(pacientes)
+
+@app.route('/guardar_datos_1', methods=['POST'])
+def guardar_datos():
+    data = request.json
+    connection = connect_db()
+    cursor = connection.cursor()
+
+    query = """
+    INSERT INTO datos_diabetes (diabetes_gestacional, glucosa, presion_arterial, insulina, imc, funcion_pedigri, edad)
+    VALUES (%s, %s, %s, %s, %s, %s, %s)
+    """
+    values = (
+        data['diabetesGestacional'],
+        data['glucosa'],
+        data['presionArterial'],
+        data['insulina'],
+        data['imc'],
+        data['funcionPedrigri'],
+        data['edad']
+    )
+    cursor.execute(query, values)
+    connection.commit()
+    cursor.close()
+    connection.close()
+    return jsonify({'message': 'Datos guardados exitosamente'}), 200
 
 @app.route('/predict', methods=['POST'])
 def predict():
