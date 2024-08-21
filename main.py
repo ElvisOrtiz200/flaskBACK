@@ -117,6 +117,39 @@ def process_values():
     })
 
 
+@app.route('/get_reporte_metformina', methods=['GET'])
+def get_reporte_metformina():
+    connection = mysql.connector.connect(
+        host="localhost",
+        user="root",
+        password="123456",
+        database="machine",
+        port=3306
+    )
+    
+    cursor = connection.cursor(dictionary=True)
+    query = """
+    SELECT DATE(medicamento.fecha) AS fecha, SUM(medicamento.prediccion) AS total_prediccion
+    FROM medicamento
+    INNER JOIN pacient ON medicamento.pacient_id = pacient.id
+    WHERE pacient.id = %s
+    GROUP BY DATE(medicamento.fecha)
+    ORDER BY DATE(medicamento.fecha) ASC
+    """
+    
+    pacient_id = 1  # Reemplaza esto con el valor adecuado
+    cursor.execute(query, (pacient_id,))
+    rows = cursor.fetchall()
+    
+    cursor.close()
+    connection.close()
+    
+    return jsonify(rows)
+
+
+
+
+
 @app.route('/objetive3', methods=['POST'])
 def proceso_tres():
     data = request.get_json(force=True)
