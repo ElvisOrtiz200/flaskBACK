@@ -3,7 +3,8 @@ import joblib
 import numpy as np
 from flask_cors import CORS
 import pandas as pd
-import mysql.connector
+import numpy
+# import mysql.connector
 
 app = Flask(__name__)
 CORS(app)  # This allows all origins by default
@@ -20,13 +21,13 @@ scaler2 = joblib.load('./objetive2scaler.pkl')
 le_genero = joblib.load('./label_encoder_genero.pkl')
 le_antecedentes = joblib.load('label_encoder_antecedentes.pkl')
 
-def connect_db():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="123456",
-        database="machine"
-    )
+# def connect_db():
+#     return mysql.connector.connect(
+#         host="localhost",
+#         user="root",
+#         password="123456",
+#         database="machine"
+#     )
 
 def cadena_a_dataframe(cadena):
     valores = cadena.split(',')
@@ -43,48 +44,48 @@ def cadena_a_dataframe(cadena):
     }
     return pd.DataFrame([datos_entrada])
 
-@app.route('/api/pacientesByName', methods=['GET'])
-def buscar_pacientes_byName():
-    paciente = request.args.get('pacienteBuscado')
+# @app.route('/api/pacientesByName', methods=['GET'])
+# def buscar_pacientes_byName():
+#     paciente = request.args.get('pacienteBuscado')
     
-    conn = connect_db()
-    cursor = conn.cursor(dictionary=True)
-    query = """
-        SELECT id, nombre, apellido, dni, email
-        FROM pacient
-        WHERE nombre LIKE %s OR apellido LIKE %s
-    """
-    cursor.execute(query, (f"%{paciente}%", f"%{paciente}%"))
-    pacientes = cursor.fetchall()
-    cursor.close()
-    conn.close()
+#     conn = connect_db()
+#     cursor = conn.cursor(dictionary=True)
+#     query = """
+#         SELECT id, nombre, apellido, dni, email
+#         FROM pacient
+#         WHERE nombre LIKE %s OR apellido LIKE %s
+#     """
+#     cursor.execute(query, (f"%{paciente}%", f"%{paciente}%"))
+#     pacientes = cursor.fetchall()
+#     cursor.close()
+#     conn.close()
     
-    return jsonify(pacientes)
+#     return jsonify(pacientes)
 
-@app.route('/guardar_datos_1', methods=['POST'])
-def guardar_datos():
-    data = request.json
-    connection = connect_db()
-    cursor = connection.cursor()
+# @app.route('/guardar_datos_1', methods=['POST'])
+# def guardar_datos():
+#     data = request.json
+#     connection = connect_db()
+#     cursor = connection.cursor()
 
-    query = """
-    INSERT INTO datos_diabetes (diabetes_gestacional, glucosa, presion_arterial, insulina, imc, funcion_pedigri, edad)
-    VALUES (%s, %s, %s, %s, %s, %s, %s)
-    """
-    values = (
-        data['diabetesGestacional'],
-        data['glucosa'],
-        data['presionArterial'],
-        data['insulina'],
-        data['imc'],
-        data['funcionPedrigri'],
-        data['edad']
-    )
-    cursor.execute(query, values)
-    connection.commit()
-    cursor.close()
-    connection.close()
-    return jsonify({'message': 'Datos guardados exitosamente'}), 200
+#     query = """
+#     INSERT INTO datos_diabetes (diabetes_gestacional, glucosa, presion_arterial, insulina, imc, funcion_pedigri, edad)
+#     VALUES (%s, %s, %s, %s, %s, %s, %s)
+#     """
+#     values = (
+#         data['diabetesGestacional'],
+#         data['glucosa'],
+#         data['presionArterial'],
+#         data['insulina'],
+#         data['imc'],
+#         data['funcionPedrigri'],
+#         data['edad']
+#     )
+#     cursor.execute(query, values)
+#     connection.commit()
+#     cursor.close()
+#     connection.close()
+#     return jsonify({'message': 'Datos guardados exitosamente'}), 200
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -117,34 +118,34 @@ def process_values():
     })
 
 
-@app.route('/get_reporte_metformina', methods=['GET'])
-def get_reporte_metformina():
-    connection = mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="123456",
-        database="machine",
-        port=3306
-    )
+# @app.route('/get_reporte_metformina', methods=['GET'])
+# def get_reporte_metformina():
+#     connection = mysql.connector.connect(
+#         host="localhost",
+#         user="root",
+#         password="123456",
+#         database="machine",
+#         port=3306
+#     )
     
-    cursor = connection.cursor(dictionary=True)
-    query = """
-    SELECT DATE(medicamento.fecha) AS fecha, SUM(medicamento.prediccion) AS total_prediccion
-    FROM medicamento
-    INNER JOIN pacient ON medicamento.pacient_id = pacient.id
-    WHERE pacient.id = %s
-    GROUP BY DATE(medicamento.fecha)
-    ORDER BY DATE(medicamento.fecha) ASC
-    """
+#     cursor = connection.cursor(dictionary=True)
+#     query = """
+#     SELECT DATE(medicamento.fecha) AS fecha, SUM(medicamento.prediccion) AS total_prediccion
+#     FROM medicamento
+#     INNER JOIN pacient ON medicamento.pacient_id = pacient.id
+#     WHERE pacient.id = %s
+#     GROUP BY DATE(medicamento.fecha)
+#     ORDER BY DATE(medicamento.fecha) ASC
+#     """
     
-    pacient_id = 1  # Reemplaza esto con el valor adecuado
-    cursor.execute(query, (pacient_id,))
-    rows = cursor.fetchall()
+#     pacient_id = 1  # Reemplaza esto con el valor adecuado
+#     cursor.execute(query, (pacient_id,))
+#     rows = cursor.fetchall()
     
-    cursor.close()
-    connection.close()
+#     cursor.close()
+#     connection.close()
     
-    return jsonify(rows)
+#     return jsonify(rows)
 
 
 
